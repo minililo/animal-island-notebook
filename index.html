@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#fdf8f0">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="动森记事本">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>动森记事本</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #5cc8b9;
+    --primary-hover: #7dd4c6;
+    --primary-active: #48a89b;
+    --primary-bg: #eafaf6;
+    --text: #6b5040;
+    --text-body: #5e4835;
+    --text-secondary: #9a8878;
+    --text-muted: #8a7b66;
+    --text-disabled: #c4b89e;
+    --bg: #fdf8f0;
+    --bg-content: #faf5eb;
+    --bg-disabled: #f0ece2;
+    --border: #d4c8b8;
+    --border-hover: #b8a890;
+    --border-strong: #a89880;
+    --success: #7cc85a;
+    --success-active: #5ea83a;
+    --warning: #f5c84a;
+    --warning-active: #d8a830;
+    --error: #e88080;
+    --error-active: #d06060;
+    --focus-yellow: #ffe066;
+    --shadow-btn: #c8b8a4;
+    --shadow-input: #d8cbb8;
+    --r-pill: 50px;
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --d-fast: 0.15s;
+    --d-base: 0.25s;
+    --d-slow: 0.35s;
+    --radius: 20px;
+    --radius-sm: 16px;
+    --ochre: #5cc8b9;
+    --ochre-light: rgba(92,200,185,0.08);
+    --ochre-mid: rgba(92,200,185,0.2);
+    --pink: #f0a0b0;
+    --pink-bg: #fef0f2;
+    --mint: #80d0b8;
+    --mint-bg: #e8f8f2;
+    --lavender: #b898d8;
+    --lavender-bg: #f4eefc;
+    --peach: #f0b090;
+    --peach-bg: #fef4ee;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  body {
+    font-family: 'Nunito', 'Noto Sans SC', -apple-system, 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    background:var(--bg); color:var(--text-body);
+    max-width:430px; margin:0 auto; min-height:100vh;
+    overflow-x:hidden; -webkit-font-smoothing:antialiased;
+    font-weight:500; letter-spacing:0.01em;
+    padding-bottom:env(safe-area-inset-bottom);
+    padding-top:env(safe-area-inset-top);
+  }
+
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(ellipse at 15% 30%, rgba(92,200,185,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 70%, rgba(240,160,176,0.03) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(245,200,74,0.02) 0%, transparent 40%);
+  }
+
+  .page { display:none; min-height:100vh; position:relative; z-index:1; }
+  .page.active { display:block; }
+
+  .cal-page { padding:0 16px 100px; }
+
+  .status-bar {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 0 6px; font-size:12px; color:var(--text-secondary);
+    font-weight:600; letter-spacing:0.5px;
+  }
+
+  .cal-header { display:flex; justify-content:space-between; align-items:center; padding:8px 0 20px; }
+  .cal-header .month-title {
+    font-size:22px; font-weight:700; color:var(--text);
+    letter-spacing:1px;
+  }
+  .cal-header .month-title span { color:var(--primary); font-weight:800; }
+  .cal-header .nav-btns { display:flex; gap:8px; }
+  .nav-btn {
+    width:36px; height:36px; border-radius:50%; cursor:pointer;
+    border:none; background:var(--bg-content);
+    color:var(--text); font-size:15px; display:flex; align-items:center; justify-content:center;
+    transition:all 0.15s var(--ease); font-family:inherit; font-weight:700;
+    box-shadow:0 3px 0 0 var(--shadow-btn);
+  }
+  .nav-btn:hover { transform:translateY(-1px); box-shadow:0 4px 0 0 var(--shadow-btn); }
+  .nav-btn:active { transform:translateY(2px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+
+  .weekday-row { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; padding-bottom:10px; }
+  .weekday-row span {
+    font-size:11px; color:var(--text-secondary); font-weight:700;
+    letter-spacing:1px; padding:4px 0;
+  }
+  .weekday-row span:first-child { color:var(--error); }
+  .weekday-row span:last-child { color:var(--primary); }
+
+  .cal-grid-wrap { overflow:hidden; border-radius:var(--radius-sm); }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; }
+  .cal-grid.slide-left { animation:slideLeft 0.3s ease forwards; }
+  .cal-grid.slide-right { animation:slideRight 0.3s ease forwards; }
+  @keyframes slideLeft { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes slideRight { from{opacity:0;transform:translateX(-40px)} to{opacity:1;transform:translateX(0)} }
+  .cal-day {
+    padding:6px 0 3px; border-radius:14px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    transition:all 0.15s var(--ease);
+  }
+  .cal-day .day-num {
+    width:34px; height:34px; border-radius:50%; display:flex;
+    align-items:center; justify-content:center;
+    font-size:14px; font-weight:600; transition:all 0.15s var(--ease);
+    background:var(--bg-content); border:none;
+    box-shadow:0 3px 0 0 var(--shadow-btn);
+  }
+  .cal-day:active .day-num { transform:translateY(2px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+  .cal-day.other-month .day-num { color:var(--text-disabled); background:var(--bg-disabled); box-shadow:0 2px 0 0 #d0c4b4; }
+  .cal-day.today .day-num {
+    background:var(--primary); color:#fff; font-weight:800;
+    box-shadow:0 3px 0 0 #3a988a;
+  }
+  .cal-day.today:active .day-num { transform:translateY(2px); box-shadow:0 1px 0 0 #3a988a; }
+  .cal-day.selected .day-num {
+    background:var(--warning); color:var(--text); font-weight:700;
+    box-shadow:0 1px 0 0 var(--warning-active);
+    transform:translateY(2px);
+  }
+  .cal-day .dot-row { display:flex; gap:3px; height:5px; }
+  .cal-day .dot { width:4px; height:4px; border-radius:50%; }
+  .dot.event { background:var(--primary); }
+  .dot.note { background:var(--warning); }
+  .cal-day .day-total {
+    font-size:9px; font-weight:700; min-height:12px; white-space:nowrap;
+    letter-spacing:0.02em;
+  }
+  .day-total.expense { color:var(--error); }
+  .day-total.income { color:var(--success); }
+
+  .ink-divider {
+    height:12px; margin:14px 0;
+    background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 14"><path d="M0 7 C24.75 3,49.5 11,74.25 7 C99 3,123.75 11,148.5 7 C173.25 3,198 11,222.75 7 C247.5 3,272.25 11,297 7" fill="none" stroke="%235cc8b9" stroke-width="1.5" opacity="0.4"/></svg>') center / contain no-repeat;
+  }
+
+  .month-summary {
+    margin:12px 0 0; padding:16px 8px;
+    display:flex; justify-content:space-around;
+    border-radius:var(--radius); background:var(--bg-content);
+    border:1.5px solid #d8ccb8;
+    background:
+      radial-gradient(circle, rgba(200,188,168,0.15) 1.5px, transparent 1.5px) 0 0/28px 28px,
+      radial-gradient(circle, rgba(200,188,168,0.1) 1px, transparent 1px) 7px 7px/14px 14px,
+      var(--bg-content);
+  }
+  .ms-item { text-align:center; }
+  .ms-label { font-size:10px; color:var(--text-secondary); margin-bottom:4px; letter-spacing:1px; font-weight:600; }
+  .ms-val { font-size:16px; font-weight:700; }
+  .ms-val.exp { color:var(--error); }
+  .ms-val.inc { color:var(--success); }
+  .ms-val.bal { color:var(--text); }
+
+  .overview-card {
+    margin:12px 0 0; padding:18px; border-radius:var(--radius);
+    background:var(--bg-content); border:1.5px solid #d8ccb8;
+    background:
+      radial-gradient(circle, rgba(92,200,185,0.1) 1.5px, transparent 1.5px) 0 0/28px 28px,
+      radial-gradient(circle, rgba(92,200,185,0.07) 1px, transparent 1px) 7px 7px/14px 14px,
+      #e8f8f2;
+    border:1.5px solid #88d8c0;
+  }
+  .card-title {
+    font-size:13px; color:var(--text-body); margin-bottom:14px;
+    display:flex; align-items:center; gap:8px; letter-spacing:1px; font-weight:700;
+  }
+  .card-title::before {
+    content:''; width:3px; height:14px; background:var(--primary); border-radius:2px;
+  }
+  .ov-item { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid rgba(92,200,185,0.1); }
+  .ov-item:last-child { border-bottom:none; }
+  .ov-time { font-size:12px; color:var(--primary); font-weight:700; min-width:40px; }
+  .ov-title { font-size:13px; color:var(--text-body); flex:1; font-weight:600; }
+  .ov-sub { font-size:11px; color:var(--text-secondary); }
+  .ov-empty { text-align:center; padding:28px 0; color:var(--text-disabled); font-size:13px; letter-spacing:1px; font-weight:500; }
+  .ov-empty .ov-icon { font-size:28px; margin-bottom:8px; }
+
+  .day-page { display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+  .day-header-simple {
+    display:flex; align-items:center; padding:12px 16px 10px;
+    flex-shrink:0; gap:12px;
+  }
+  .back-btn {
+    display:inline-flex; align-items:center; gap:2px; font-size:13px;
+    cursor:pointer; background:var(--bg-content); border:none;
+    padding:8px 16px; color:var(--text-body); font-family:inherit; letter-spacing:0.5px;
+    border-radius:var(--r-pill); font-weight:600; transition:all 0.15s var(--ease);
+    box-shadow:0 3px 0 0 var(--shadow-btn);
+  }
+  .back-btn:hover { transform:translateY(-1px); box-shadow:0 4px 0 0 var(--shadow-btn); color:var(--primary); }
+  .back-btn:active { transform:translateY(2px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+  .date-info { flex:1; }
+  .date-display { font-size:20px; font-weight:700; color:var(--text); letter-spacing:1px; }
+  .date-sub { font-size:11px; color:var(--text-secondary); margin-top:1px; letter-spacing:0.5px; font-weight:500; }
+  .mood-btn {
+    width:38px; height:38px; border-radius:50%;
+    border:none; background:var(--bg-content);
+    font-size:14px; cursor:pointer; font-family:inherit; letter-spacing:0;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--text-body); font-weight:700; transition:all 0.15s var(--ease);
+    box-shadow:0 3px 0 0 var(--shadow-btn);
+    overflow:hidden;
+  }
+  .mood-btn svg { width:20px; height:20px; }
+  .mood-btn:hover { transform:translateY(-1px); box-shadow:0 4px 0 0 var(--shadow-btn); }
+  .mood-btn:active { transform:translateY(2px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+
+  .day-main-tabs {
+    display:flex; gap:0; padding:4px; margin:0 16px 10px; flex-shrink:0;
+    border:2px solid #ece6d8; border-radius:24px; background:#fffc;
+  }
+  .day-main-tab {
+    flex:1; padding:9px 0; text-align:center; font-size:13px; font-weight:600;
+    cursor:pointer; color:var(--text-secondary); background:transparent;
+    border:none; border-radius:20px; transition:all 0.25s; font-family:inherit; letter-spacing:1px;
+  }
+  .day-main-tab.active {
+    background:var(--primary); color:#fff; box-shadow:0 3px 8px rgba(92,200,185,0.3);
+    font-weight:700;
+  }
+
+  .day-body { flex:1; display:flex; flex-direction:column; overflow:hidden; padding:0 16px; }
+
+  .day-panel { display:none; flex-direction:column; flex:1; overflow:hidden; }
+  .day-panel.active { display:flex; }
+
+  .day-list { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:8px; }
+
+  .day-add-bar {
+    flex-shrink:0; padding:10px 0; border-top:1px solid rgba(92,200,185,0.1);
+  }
+  .day-add-form { display:none; }
+  .day-add-form.show { display:block; }
+  .day-add-toggle {
+    width:100%; padding:11px; border-radius:var(--r-pill); cursor:pointer;
+    border:none; background:var(--bg-content);
+    color:var(--text-secondary); font-size:13px; font-family:inherit; letter-spacing:0.5px;
+    transition:all 0.15s var(--ease); font-weight:600;
+    box-shadow:0 3px 0 0 var(--shadow-btn);
+  }
+  .day-add-toggle:hover { transform:translateY(-1px); box-shadow:0 4px 0 0 var(--shadow-btn); color:var(--primary); }
+  .day-add-toggle:active { transform:translateY(2px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+
+  .tl-item { display:flex; gap:10px; }
+  .tl-time { min-width:42px; font-size:12px; color:var(--primary); font-weight:700; padding-top:14px; text-align:right; }
+  .tl-line { display:flex; flex-direction:column; align-items:center; padding-top:16px; }
+  .tl-dot { width:8px; height:8px; border-radius:50%; background:var(--primary); flex-shrink:0; box-shadow:0 0 0 3px rgba(92,200,185,0.15); }
+  .tl-conn { width:1.5px; flex:1; background:var(--ochre-mid); margin:3px 0; }
+  .tl-card {
+    flex:1; padding:12px 14px; margin-bottom:8px; border-radius:var(--radius-sm);
+    background:var(--bg-content); border:1.5px solid #d8ccb8;
+    background:
+      radial-gradient(circle, rgba(200,188,168,0.12) 1.5px, transparent 1.5px) 0 0/28px 28px,
+      radial-gradient(circle, rgba(200,188,168,0.08) 1px, transparent 1px) 7px 7px/14px 14px,
+      var(--bg-content);
+  }
+  .tl-card .tl-title { font-size:13px; color:var(--text-body); font-weight:600; }
+  .tl-card .tl-loc { font-size:11px; color:var(--text-secondary); margin-top:3px; }
+  .tl-card .tl-acts { display:flex; gap:6px; margin-top:8px; }
+  .tl-act {
+    padding:5px 14px; border-radius:var(--r-pill); font-size:11px; cursor:pointer;
+    border:none; background:var(--bg-content);
+    color:var(--text-body); font-family:inherit; letter-spacing:0.3px; font-weight:600;
+    transition:all 0.15s var(--ease);
+    box-shadow:0 2px 0 0 var(--shadow-btn);
+  }
+  .tl-act:hover { transform:translateY(-1px); box-shadow:0 3px 0 0 var(--shadow-btn); color:var(--primary); }
+  .tl-act:active { transform:translateY(1px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+  .tl-act.danger { color:var(--error); background:#fef0f0; box-shadow:0 2px 0 0 #d8a0a0; }
+  .tl-act.danger:hover { box-shadow:0 3px 0 0 #d8a0a0; }
+
+  .now-indicator { display:flex; align-items:center; gap:8px; padding:6px 0; margin-left:52px; }
+  .now-line { flex:1; height:2px; background:var(--error); opacity:0.5; border-radius:1px; }
+  .now-label { font-size:10px; color:var(--error); letter-spacing:1px; font-weight:700; }
+
+  .note-card {
+    padding:14px; margin-bottom:8px; border-radius:var(--radius-sm);
+    background:var(--bg-content); border:1.5px solid #d8ccb8;
+    position:relative;
+    background:
+      radial-gradient(circle, rgba(245,200,74,0.12) 1.5px, transparent 1.5px) 0 0/28px 28px,
+      radial-gradient(circle, rgba(245,200,74,0.08) 1px, transparent 1px) 7px 7px/14px 14px,
+      #fef8e8;
+    border:1.5px solid #f5d060;
+  }
+  .note-time { font-size:10px; color:var(--text-disabled); margin-bottom:6px; letter-spacing:0.5px; font-weight:600; }
+  .note-content { font-size:13px; line-height:1.75; color:var(--text-body); font-weight:500; }
+  .note-tag {
+    display:inline-block; padding:3px 10px; border-radius:var(--r-pill);
+    font-size:10px; margin-top:8px; letter-spacing:0.3px; font-weight:700;
+    border:1.5px solid;
+  }
+  .tag-work { color:var(--primary); border-color:rgba(92,200,185,0.3); background:rgba(92,200,185,0.06); }
+  .tag-life { color:var(--peach); border-color:rgba(240,176,144,0.3); background:rgba(240,176,144,0.06); }
+  .tag-health { color:var(--success); border-color:rgba(124,200,90,0.3); background:rgba(124,200,90,0.06); }
+  .tag-think { color:var(--lavender); border-color:rgba(184,152,216,0.3); background:rgba(184,152,216,0.06); }
+  .note-acts { position:absolute; top:10px; right:10px; display:flex; gap:4px; opacity:0; transition:opacity 0.15s; }
+  .note-card:active .note-acts { opacity:1; }
+  .n-act {
+    width:26px; height:26px; border-radius:50%; background:var(--bg-content);
+    border:none; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center;
+    color:var(--text-secondary); font-weight:600; transition:all 0.15s var(--ease);
+    box-shadow:0 2px 0 0 var(--shadow-btn);
+  }
+  .n-act:hover { transform:translateY(-1px); box-shadow:0 3px 0 0 var(--shadow-btn); color:var(--primary); }
+  .n-act:active { transform:translateY(1px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+
+  .acc-summary {
+    display:flex; border-radius:var(--radius-sm); overflow:hidden; margin:0 0 10px;
+    border:1.5px solid #d8ccb8; background:var(--bg-content);
+  }
+  .acc-summary .as-item { flex:1; text-align:center; padding:10px 0; border-right:1px solid rgba(200,188,168,0.2); }
+  .acc-summary .as-item:last-child { border-right:none; }
+  .as-val { font-size:14px; font-weight:700; }
+  .as-label { font-size:9px; color:var(--text-secondary); margin-top:2px; letter-spacing:1px; font-weight:600; }
+
+  .acc-list { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .acc-entry {
+    display:flex; align-items:center; gap:10px; padding:11px 14px;
+    border-radius:var(--radius-sm); margin-bottom:6px;
+    border:1.5px solid rgba(200,188,168,0.3); background:var(--bg-content);
+    transition:all 0.15s;
+  }
+  .acc-entry:hover { border-color:var(--primary); }
+  .acc-icon {
+    width:32px; height:32px; border-radius:10px; display:flex;
+    align-items:center; justify-content:center; font-size:13px; flex-shrink:0;
+    border:1.5px solid rgba(92,200,185,0.2); color:var(--primary);
+    font-weight:700; background:var(--primary-bg);
+  }
+  .acc-icon svg { width:16px; height:16px; }
+  .acc-info { flex:1; min-width:0; }
+  .acc-cat { font-size:13px; color:var(--text-body); font-weight:600; }
+  .acc-note { font-size:10px; color:var(--text-secondary); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .acc-amt { font-size:13px; font-weight:700; flex-shrink:0; }
+  .acc-amt.exp { color:var(--error); }
+  .acc-amt.inc { color:var(--success); }
+  .acc-del {
+    width:26px; height:26px; border-radius:50%; background:var(--bg-content);
+    border:none; cursor:pointer; font-size:11px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--text-disabled); font-weight:600; flex-shrink:0;
+    transition:all 0.15s var(--ease);
+    box-shadow:0 2px 0 0 var(--shadow-btn);
+  }
+  .acc-del:hover { transform:translateY(-1px); box-shadow:0 3px 0 0 #d8a0a0; color:var(--error); }
+  .acc-del:active { transform:translateY(1px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+
+  .empty-state { text-align:center; padding:32px 0; color:var(--text-disabled); }
+  .em-icon { font-size:28px; margin-bottom:8px; }
+  .em-text { font-size:12px; letter-spacing:1px; font-weight:500; }
+
+  .fab {
+    position:fixed; bottom:28px; right:20px; width:52px; height:52px;
+    border-radius:50%; background:var(--primary); color:#fff; border:none;
+    font-size:24px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.15s var(--ease); z-index:10; font-family:inherit; font-weight:700;
+    box-shadow:0 5px 0 0 #3a988a;
+  }
+  .fab:hover { transform:translateY(-1px); box-shadow:0 6px 0 0 #3a988a; }
+  .fab:active { transform:translateY(3px); box-shadow:0 2px 0 0 #3a988a; }
+
+  .modal-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35);
+    z-index:100; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    animation:fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .modal-overlay.show { display:flex; align-items:flex-end; justify-content:center; }
+  .modal-sheet {
+    width:100%; max-width:430px; margin:0 auto;
+    border-radius:24px 24px 0 0; padding:14px 22px 40px;
+    animation:slideUp 0.35s cubic-bezier(0.32,0.72,0,1);
+    max-height:85vh; overflow-y:auto;
+    background:var(--bg-content); border-top:1.5px solid #d8ccb8;
+    box-shadow:0 -4px 30px rgba(90,72,52,0.12);
+  }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .modal-handle { width:32px; height:3px; background:var(--text-disabled); border-radius:2px; margin:0 auto 18px; opacity:0.5; }
+  .modal-title { font-size:18px; font-weight:700; margin-bottom:18px; text-align:center; color:var(--text); letter-spacing:1px; }
+
+  .input-group { margin-bottom:14px; }
+  .input-label { font-size:12px; color:var(--text-secondary); margin-bottom:6px; display:block; letter-spacing:0.5px; font-weight:600; }
+  .input-field {
+    width:100%; padding:10px 16px; border-radius:var(--r-pill);
+    border:2px solid var(--border); font-size:14px;
+    outline:none; font-family:inherit; background:var(--bg-content);
+    color:var(--text-body); transition:all 0.2s; font-weight:500;
+    box-shadow:0 2px 0 0 var(--shadow-input);
+  }
+  .input-field:focus { border-color:var(--focus-yellow); box-shadow:0 2px 0 0 var(--warning-active); background:#fff; }
+  .input-field::placeholder { color:var(--text-disabled); font-weight:400; }
+  textarea.input-field { border-radius:20px; padding:14px 18px; resize:vertical; min-height:72px; line-height:1.7; }
+  textarea.input-field:focus { border-radius:20px; }
+
+  .type-switch {
+    display:flex; gap:0; padding:3px; margin-bottom:14px;
+    border:2px solid #ece6d8; border-radius:20px; background:#fffc;
+  }
+  .type-btn {
+    flex:1; padding:8px; border-radius:18px; text-align:center;
+    font-size:12px; font-weight:600; cursor:pointer; border:none; background:transparent;
+    color:var(--text-secondary); transition:all 0.25s; font-family:inherit; letter-spacing:0.5px;
+  }
+  .type-btn.active { background:var(--primary); color:#fff; box-shadow:0 2px 6px rgba(92,200,185,0.25); }
+
+  .tag-picker { display:flex; gap:8px; flex-wrap:wrap; }
+  .tag-opt {
+    padding:5px 14px; border-radius:var(--r-pill); font-size:11px; font-weight:600;
+    cursor:pointer; border:1.5px solid var(--border);
+    background:transparent; color:var(--text-secondary); transition:all 0.2s;
+    font-family:inherit; letter-spacing:0.3px;
+  }
+  .tag-opt:hover { border-color:var(--primary); color:var(--primary); }
+  .tag-opt.active { border-color:var(--primary); color:var(--primary); background:var(--primary-bg); }
+
+  .submit-btn {
+    width:100%; padding:12px; border-radius:var(--r-pill);
+    background:var(--primary); color:#fff; border:none;
+    font-size:14px; font-weight:700; cursor:pointer; margin-top:8px;
+    transition:all 0.15s var(--ease); font-family:inherit; letter-spacing:1px;
+    box-shadow:0 4px 0 0 #3a988a;
+  }
+  .submit-btn:hover { transform:translateY(-1px); box-shadow:0 5px 0 0 #3a988a; }
+  .submit-btn:active { transform:translateY(2px); box-shadow:0 1px 0 0 #3a988a; }
+  .cancel-btn {
+    padding:12px 24px; border-radius:var(--r-pill);
+    background:var(--bg-content); color:var(--text-body); border:none;
+    font-size:14px; font-weight:600; cursor:pointer; margin-top:8px;
+    transition:all 0.15s var(--ease); font-family:inherit; letter-spacing:0.5px;
+    box-shadow:0 3px 0 0 var(--shadow-btn);
+  }
+  .cancel-btn:hover { transform:translateY(-1px); box-shadow:0 4px 0 0 var(--shadow-btn); }
+  .cancel-btn:active { transform:translateY(2px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+
+  .acc-type-sw {
+    display:flex; gap:0; padding:3px; margin-bottom:14px;
+    border:2px solid #ece6d8; border-radius:20px; background:#fffc;
+  }
+  .acc-type-btn {
+    flex:1; padding:8px; text-align:center; font-size:12px; font-weight:600;
+    cursor:pointer; border:none; background:transparent;
+    color:var(--text-secondary); border-radius:18px; transition:all 0.25s;
+    font-family:inherit; letter-spacing:0.5px;
+  }
+  .acc-type-btn.ae { background:var(--error); color:#fff; box-shadow:0 2px 6px rgba(232,128,128,0.25); }
+  .acc-type-btn.ai { background:var(--success); color:#fff; box-shadow:0 2px 6px rgba(124,200,90,0.25); }
+
+  .cat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
+  .cat-btn {
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:10px 4px; border-radius:14px;
+    border:none; background:var(--bg-content);
+    cursor:pointer; transition:all 0.15s var(--ease);
+    box-shadow:0 3px 0 0 var(--shadow-btn);
+  }
+  .cat-btn:hover { transform:translateY(-1px); box-shadow:0 4px 0 0 var(--shadow-btn); }
+  .cat-btn.active { background:var(--primary-bg); box-shadow:0 3px 0 0 #3a988a; }
+  .cat-btn:active { transform:translateY(2px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+  .cat-btn .ci { font-size:14px; color:var(--primary); font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .cat-btn .cn { font-size:10px; color:var(--text-secondary); letter-spacing:0.3px; font-weight:600; }
+
+  .mood-bd { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); backdrop-filter:blur(4px); z-index:140; }
+  .mood-bd.show { display:block; }
+  .mood-pp {
+    display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    border-radius:var(--radius); padding:28px; z-index:150; text-align:center;
+    background:var(--bg-content); border:1.5px solid #d8ccb8;
+    box-shadow:0 8px 24px rgba(90,72,52,0.14);
+    background:
+      radial-gradient(circle, rgba(200,188,168,0.12) 1.5px, transparent 1.5px) 0 0/28px 28px,
+      radial-gradient(circle, rgba(200,188,168,0.08) 1px, transparent 1px) 7px 7px/14px 14px,
+      var(--bg-content);
+  }
+  .mood-pp.show { display:block; animation:fadeIn 0.25s ease; }
+  .mp-title { font-size:16px; color:var(--text); margin-bottom:18px; letter-spacing:1px; font-weight:700; }
+  .mood-opts { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+  .mood-o {
+    width:44px; height:44px; border-radius:50%; font-size:13px;
+    border:none; background:var(--bg-content);
+    cursor:pointer; transition:all 0.15s var(--ease);
+    display:flex; align-items:center; justify-content:center;
+    font-family:inherit; color:var(--text-body); font-weight:700;
+    box-shadow:0 3px 0 0 var(--shadow-btn);
+  }
+  .mood-o:hover { transform:translateY(-1px); box-shadow:0 4px 0 0 var(--shadow-btn); }
+  .mood-o:active { transform:translateY(2px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+
+  .toast {
+    position:fixed; top:60px; left:50%; transform:translateX(-50%);
+    padding:10px 24px; border-radius:var(--r-pill); font-size:13px; font-weight:600;
+    z-index:200; opacity:0; transition:opacity 0.25s; pointer-events:none;
+    background:var(--text); color:#fff; letter-spacing:0.5px;
+    box-shadow:0 4px 12px rgba(90,72,52,0.2);
+  }
+  .toast.show { opacity:1; }
+
+  ::-webkit-scrollbar { width:0; height:0; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="page active" id="calPage">
+  <div class="cal-page">
+    <div class="status-bar"><span id="clock"></span><span>🍃 Animal Island</span></div>
+    <div class="cal-header">
+      <div class="month-title" id="monthTitle"></div>
+      <div class="nav-btns">
+        <div class="nav-btn" onclick="changeMonth(-1)">‹</div>
+        <div class="nav-btn" onclick="changeMonth(0)">今</div>
+        <div class="nav-btn" onclick="changeMonth(1)">›</div>
+      </div>
+    </div>
+    <div class="weekday-row">
+      <span>日</span><span>一</span><span>二</span><span>三</span>
+      <span>四</span><span>五</span><span>六</span>
+    </div>
+    <div class="cal-grid-wrap"><div class="cal-grid" id="calGrid"></div></div>
+    <div class="month-summary" id="monthSum"></div>
+    <div class="overview-card" id="ovCard">
+      <div class="card-title" id="ovTitle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8 20C19 20 22 3 22 3C21 5 14 5.25 9 6.25C4 7.25 2 11.5 2 13.5C2 15.5 3.75 17.25 3.75 17.25C7 8 17 8 17 8Z" fill="var(--primary)"/></svg>今日概览</div>
+      <div id="ovContent"></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="dayPage">
+  <div class="day-page">
+    <div class="day-header-simple">
+      <button class="back-btn" onclick="goBack()">‹ 返回</button>
+      <div class="date-info">
+        <div class="date-display" id="dDisp"></div>
+        <div class="date-sub" id="dSub"></div>
+      </div>
+      <button class="mood-btn" id="moodBtn" onclick="openMood()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8 20C19 20 22 3 22 3C21 5 14 5.25 9 6.25C4 7.25 2 11.5 2 13.5C2 15.5 3.75 17.25 3.75 17.25C7 8 17 8 17 8Z" stroke="var(--primary)" stroke-width="1.5" fill="var(--primary-bg)"/></svg></button>
+    </div>
+
+    <div class="day-main-tabs">
+      <button class="day-main-tab active" data-panel="events" onclick="switchDayPanel('events')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>事件</button>
+      <button class="day-main-tab" data-panel="accounts" onclick="switchDayPanel('accounts')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 0 1 0 4H8"/><path d="M12 18V6"/></svg>记账</button>
+    </div>
+
+    <div class="day-body">
+      <div class="day-panel active" id="panel-events">
+        <div class="day-list" id="eventsList"></div>
+        <div class="day-add-bar">
+          <button class="day-add-toggle" onclick="toggleAddForm('event')">+ 添加事件或记事</button>
+          <div class="day-add-form" id="addEventForm">
+            <div class="type-switch" style="margin-bottom:10px">
+              <button class="type-btn active" data-tp="event" onclick="switchAddType('event')">事件</button>
+              <button class="type-btn" data-tp="note" onclick="switchAddType('note')">记事</button>
+            </div>
+            <div id="addEvFields">
+              <div class="input-group"><label class="input-label">事件名称</label><input class="input-field" id="evTitle" placeholder="输入事件名称"></div>
+              <div class="input-group" style="display:flex;gap:8px;">
+                <div style="flex:1"><label class="input-label">开始</label><input class="input-field" type="time" id="evStart" value="09:00"></div>
+                <div style="flex:1"><label class="input-label">结束</label><input class="input-field" type="time" id="evEnd" value="10:00"></div>
+              </div>
+              <div class="input-group"><label class="input-label">地点</label><input class="input-field" id="evLoc" placeholder="可选"></div>
+            </div>
+            <div id="addNtFields" style="display:none">
+              <div class="input-group"><label class="input-label">内容</label><textarea class="input-field" id="ntText" placeholder="写点什么..." style="min-height:56px"></textarea></div>
+              <div class="input-group"><label class="input-label">标签</label>
+                <div class="tag-picker">
+                  <div class="tag-opt active" data-tg="work" onclick="pickTag(this)">工作</div>
+                  <div class="tag-opt" data-tg="life" onclick="pickTag(this)">生活</div>
+                  <div class="tag-opt" data-tg="health" onclick="pickTag(this)">健康</div>
+                  <div class="tag-opt" data-tg="think" onclick="pickTag(this)">感悟</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="submit-btn" style="flex:1" onclick="submitNewEvent()">保存</button>
+              <button class="cancel-btn" onclick="toggleAddForm('event')">取消</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="day-panel" id="panel-accounts">
+        <div class="day-list" id="accountsList"></div>
+        <div class="day-add-bar">
+          <button class="day-add-toggle" onclick="toggleAddForm('account')">+ 记一笔</button>
+          <div class="day-add-form" id="addAccForm">
+            <div class="acc-type-sw">
+              <button class="acc-type-btn ae" id="atE" onclick="switchAccType('expense')">支出</button>
+              <button class="acc-type-btn" id="atI" onclick="switchAccType('income')">收入</button>
+            </div>
+            <div class="input-group"><label class="input-label">金额</label>
+              <input class="input-field" id="accAmt" type="number" step="0.01" placeholder="0.00" style="font-size:18px;text-align:center;font-weight:700;">
+            </div>
+            <div class="input-group"><label class="input-label">分类</label><div class="cat-grid" id="catG"></div></div>
+            <div class="input-group"><label class="input-label">备注</label><input class="input-field" id="accNt" placeholder="可选"></div>
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <button class="submit-btn" style="flex:1" onclick="submitNewAcc()">保存</button>
+              <button class="cancel-btn" onclick="toggleAddForm('account')">取消</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mood-bd" id="moodBd" onclick="closeMood()"></div>
+<div class="mood-pp" id="moodPp">
+  <div class="mp-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" style="vertical-align:-3px;margin-right:4px"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8 20C19 20 22 3 22 3C21 5 14 5.25 9 6.25C4 7.25 2 11.5 2 13.5C2 15.5 3.75 17.25 3.75 17.25C7 8 17 8 17 8Z" fill="var(--primary)"/></svg>今日心境</div>
+  <div class="mood-opts">
+    <div class="mood-o" onclick="setMood('喜')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="var(--warning)" stroke-width="1.5"/><path d="M12 2l1.5 3.5L17 4l-1 3.5L19 9l-3.5 1L16 14l-4-2.5L8 14l.5-4L5 9l3-1.5L7 4l3.5 1.5z" fill="var(--warning)"/><circle cx="9" cy="10" r="1.2" fill="var(--text-body)"/><circle cx="15" cy="10" r="1.2" fill="var(--text-body)"/><path d="M9 14s1 2 3 2 3-2 3-2" stroke="var(--text-body)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    <div class="mood-o" onclick="setMood('静')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8 20C19 20 22 3 22 3C21 5 14 5.25 9 6.25C4 7.25 2 11.5 2 13.5C2 15.5 3.75 17.25 3.75 17.25C7 8 17 8 17 8Z" stroke="var(--primary)" stroke-width="1.5" fill="var(--primary-bg)"/></svg></div>
+    <div class="mood-o" onclick="setMood('忧')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" fill="var(--border)"/><circle cx="8" cy="14" r="1.5" fill="var(--primary)"/><circle cx="12" cy="16" r="1.5" fill="var(--primary)"/><circle cx="16" cy="13" r="1.5" fill="var(--primary)"/></svg></div>
+    <div class="mood-o" onclick="setMood('怒')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="var(--error)" stroke-width="1.5" fill="var(--pink-bg)"/><path d="M8 8l3 2M16 8l-3 2" stroke="var(--error)" stroke-width="2" stroke-linecap="round"/><path d="M9 15c1 1 5 1 6 0" stroke="var(--error)" stroke-width="2" stroke-linecap="round"/><path d="M12 2l1 4M18 4l-2 3M6 4l2 3" stroke="var(--error)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    <div class="mood-o" onclick="setMood('暖')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13" r="9" stroke="var(--peach)" stroke-width="1.5" fill="var(--peach-bg)"/><path d="M12 6c-2-3-6-3-6 0 0 4 6 7 6 7s6-3 6-7c0-3-4-3-6 0z" fill="var(--error)"/><circle cx="9" cy="11" r="1" fill="var(--text-body)"/><circle cx="15" cy="11" r="1" fill="var(--text-body)"/><path d="M10 15s1 1.5 2 1.5 2-1.5 2-1.5" stroke="var(--text-body)" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+    <div class="mood-o" onclick="setMood('倦')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="var(--lavender)" stroke-width="1.5" fill="var(--lavender-bg)"/><circle cx="15" cy="8" r="1" fill="var(--warning)"/><circle cx="19" cy="11" r="0.7" fill="var(--warning)"/><circle cx="17" cy="14" r="0.5" fill="var(--warning)"/></svg></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const $calGrid = $('calGrid');
+const $monthTitle = $('monthTitle');
+const $monthSum = $('monthSum');
+const $ovContent = $('ovContent');
+const $ovTitle = $('ovTitle');
+const $calPage = $('calPage');
+const $dayPage = $('dayPage');
+const $dDisp = $('dDisp');
+const $dSub = $('dSub');
+const $moodBtn = $('moodBtn');
+const $eventsList = $('eventsList');
+const $accountsList = $('accountsList');
+const $catG = $('catG');
+const $toast = $('toast');
+const $moodBd = $('moodBd');
+const $moodPp = $('moodPp');
+const $clock = $('clock');
+
+let calendarData = {};
+let currentYear, currentMonth, selectedDate;
+let selectedTag = 'work';
+let editingId = null;
+let accountType = 'expense';
+let selectedCategory = 'food';
+let currentNoteType = 'event';
+
+const today = new Date();
+const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+function dateKey(y, m, d) {
+  return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+function getDateData(key) {
+  if (!calendarData[key]) {
+    calendarData[key] = { events: [], notes: [], mood: '静', accounts: [] };
+  }
+  if (!calendarData[key].accounts) {
+    calendarData[key].accounts = [];
+  }
+  return calendarData[key];
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+const moodIcons = {
+  '喜': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="var(--warning)" stroke-width="2"/><path d="M12 2l1.5 3.5L17 4l-1 3.5L19 9l-3.5 1L16 14l-4-2.5L8 14l.5-4L5 9l3-1.5L7 4l3.5 1.5z" fill="var(--warning)"/><circle cx="9" cy="10" r="1.2" fill="var(--text-body)"/><circle cx="15" cy="10" r="1.2" fill="var(--text-body)"/><path d="M9 14s1 2 3 2 3-2 3-2" stroke="var(--text-body)" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  '静': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8 20C19 20 22 3 22 3C21 5 14 5.25 9 6.25C4 7.25 2 11.5 2 13.5C2 15.5 3.75 17.25 3.75 17.25C7 8 17 8 17 8Z" stroke="var(--primary)" stroke-width="1.5" fill="var(--primary-bg)"/></svg>',
+  '忧': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" fill="var(--border)"/><circle cx="8" cy="14" r="1.5" fill="var(--primary)"/><circle cx="12" cy="16" r="1.5" fill="var(--primary)"/><circle cx="16" cy="13" r="1.5" fill="var(--primary)"/></svg>',
+  '怒': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="var(--error)" stroke-width="2" fill="var(--pink-bg)"/><path d="M8 8l3 2M16 8l-3 2" stroke="var(--error)" stroke-width="2" stroke-linecap="round"/><path d="M9 15c1 1 5 1 6 0" stroke="var(--error)" stroke-width="2" stroke-linecap="round"/><path d="M12 2l1 4M18 4l-2 3M6 4l2 3" stroke="var(--error)" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  '暖': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="13" r="9" stroke="var(--peach)" stroke-width="2" fill="var(--peach-bg)"/><path d="M12 6c-2-3-6-3-6 0 0 4 6 7 6 7s6-3 6-7c0-3-4-3-6 0z" fill="var(--error)"/><circle cx="9" cy="11" r="1" fill="var(--text-body)"/><circle cx="15" cy="11" r="1" fill="var(--text-body)"/><path d="M10 15s1 1.5 2 1.5 2-1.5 2-1.5" stroke="var(--text-body)" stroke-width="1.2" stroke-linecap="round"/></svg>',
+  '倦': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="var(--lavender)" stroke-width="2" fill="var(--lavender-bg)"/><circle cx="15" cy="8" r="1" fill="var(--warning)"/><circle cx="19" cy="11" r="0.7" fill="var(--warning)"/><circle cx="17" cy="14" r="0.5" fill="var(--warning)"/></svg>'
+};
+
+function getMoodIcon(mood) {
+  return moodIcons[mood] || moodIcons['静'];
+}
+
+const expenseCategories = [
+  { id: 'food', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>', name: '餐饮' },
+  { id: 'transport', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>', name: '交通' },
+  { id: 'shopping', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>', name: '购物' },
+  { id: 'entertain', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg>', name: '娱乐' },
+  { id: 'medical', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>', name: '医疗' },
+  { id: 'housing', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', name: '住房' },
+  { id: 'social', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', name: '社交' },
+  { id: 'other', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>', name: '其他' }
+];
+
+const incomeCategories = [
+  { id: 'salary', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>', name: '工资' },
+  { id: 'bonus', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>', name: '奖金' },
+  { id: 'invest', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>', name: '投资' },
+  { id: 'parttime', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>', name: '兼职' },
+  { id: 'refund', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>', name: '退款' },
+  { id: 'gift', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>', name: '红包' },
+  { id: 'rental', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', name: '租金' },
+  { id: 'other_in', char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', name: '其他' }
+];
+
+const categoryMap = {};
+[...expenseCategories, ...incomeCategories].forEach(c => categoryMap[c.id] = c);
+const defaultCategory = { char: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>', name: '其他' };
+
+function getCategoryById(id) {
+  return categoryMap[id] || defaultCategory;
+}
+
+function loadData() {
+  try {
+    const stored = localStorage.getItem('dn');
+    if (stored) {
+      calendarData = JSON.parse(stored);
+    }
+  } catch (e) {
+    calendarData = {};
+  }
+
+  const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const todayData = getDateData(todayKey);
+
+  if (!todayData.events.length) {
+    todayData.events = [
+      { id: 1, title: '团队周会', start: '09:00', end: '10:00', loc: '会议室A' },
+      { id: 2, title: '午饭', start: '12:00', end: '13:00', loc: '公司楼下' },
+      { id: 3, title: '需求评审', start: '14:30', end: '16:00', loc: '线上' }
+    ];
+    todayData.notes = [
+      { id: 4, content: '项目评审通过，下周进入开发阶段。', tag: 'work', time: '16:05' },
+      { id: 5, content: '楼下新开的面馆，汤底浓郁，值得一试。', tag: 'life', time: '13:20' }
+    ];
+    todayData.mood = '静';
+  }
+
+  if (!todayData.accounts.length) {
+    todayData.accounts = [
+      { id: 101, type: 'expense', cat: 'food', amount: 35, note: '午饭', time: '12:30' },
+      { id: 102, type: 'expense', cat: 'transport', amount: 6, note: '地铁', time: '08:45' },
+      { id: 103, type: 'expense', cat: 'food', amount: 15, note: '咖啡', time: '15:00' }
+    ];
+  }
+
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = dateKey(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+  const yesterdayData = getDateData(yesterdayKey);
+
+  if (!yesterdayData.events.length) {
+    yesterdayData.events = [
+      { id: 10, title: '需求评审', start: '10:00', end: '11:30', loc: '' }
+    ];
+    yesterdayData.notes = [
+      { id: 11, content: '读完《深入理解计算机系统》第三章。', tag: 'think', time: '21:00' },
+      { id: 12, content: '晨跑五公里，配速五分半。', tag: 'health', time: '19:30' }
+    ];
+    yesterdayData.mood = '静';
+    yesterdayData.accounts = [
+      { id: 201, type: 'expense', cat: 'food', amount: 42, note: '晚餐', time: '19:00' },
+      { id: 202, type: 'expense', cat: 'shopping', amount: 89, note: '买书', time: '14:00' },
+      { id: 203, type: 'income', cat: 'salary', amount: 500, note: '日结', time: '10:00' }
+    ];
+  }
+
+  save();
+}
+
+function save() {
+  localStorage.setItem('dn', JSON.stringify(calendarData));
+}
+
+function updateClock() {
+  const now = new Date();
+  $clock.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+function renderCalendar() {
+  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+
+  $monthTitle.innerHTML = `${currentYear}年 <span>${monthNames[currentMonth]}</span>`;
+
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+  let html = '';
+  for (let i = 0; i < totalCells; i++) {
+    if (i < firstDay) {
+      html += `<div class="cal-day other-month"><div class="day-num">${daysInPrevMonth - firstDay + 1 + i}</div><div class="dot-row"></div><div class="day-total"></div></div>`;
+    } else if (i >= firstDay + daysInMonth) {
+      html += `<div class="cal-day other-month"><div class="day-num">${i - firstDay - daysInMonth + 1}</div><div class="dot-row"></div><div class="day-total"></div></div>`;
+    } else {
+      const day = i - firstDay + 1;
+      const key = dateKey(currentYear, currentMonth, day);
+      const dayData = calendarData[key];
+      let dots = '', total = '';
+
+      if (dayData) {
+        if (dayData.events?.length) dots = '<div class="dot event"></div>';
+        if (dayData.notes?.length) dots += '<div class="dot note"></div>';
+        if (dayData.accounts?.length) {
+          const net = dayData.accounts.reduce((s, a) => s + (a.type === 'income' ? a.amount : -a.amount), 0);
+          if (net > 0) total = `<div class="day-total income">+${net}</div>`;
+          else if (net < 0) total = `<div class="day-total expense">${net}</div>`;
+        }
+      }
+
+      let cls = 'cal-day';
+      if (key === todayKey) cls += ' today';
+      if (key === selectedDate) cls += ' selected';
+
+      html += `<div class="${cls}" onclick="selectDay(${currentYear},${currentMonth},${day})"><div class="day-num">${day}</div><div class="dot-row">${dots}</div>${total}</div>`;
+    }
+  }
+
+  $calGrid.innerHTML = html;
+  renderMonthSummary();
+  renderOverview();
+}
+
+function changeMonth(delta) {
+  $calGrid.classList.remove('slide-left', 'slide-right');
+  $calGrid.offsetHeight;
+
+  if (delta === 0) {
+    currentYear = today.getFullYear();
+    currentMonth = today.getMonth();
+    selectedDate = todayKey;
+  } else {
+    currentMonth += delta;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  }
+  renderCalendar();
+  $calGrid.classList.add(delta >= 0 ? 'slide-left' : 'slide-right');
+}
+
+function renderMonthSummary() {
+  let expenses = 0, income = 0;
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const accounts = calendarData[dateKey(currentYear, currentMonth, day)]?.accounts;
+    if (accounts) accounts.forEach(a => { if (a.type === 'expense') expenses += a.amount; else income += a.amount; });
+  }
+
+  $monthSum.innerHTML = `
+    <div class="ms-item"><div class="ms-label">支出</div><div class="ms-val exp">¥${expenses.toFixed(2)}</div></div>
+    <div class="ms-item"><div class="ms-label">收入</div><div class="ms-val inc">¥${income.toFixed(2)}</div></div>
+    <div class="ms-item"><div class="ms-label">结余</div><div class="ms-val bal">¥${(income - expenses).toFixed(2)}</div></div>`;
+}
+
+const leafSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8 20C19 20 22 3 22 3C21 5 14 5.25 9 6.25C4 7.25 2 11.5 2 13.5C2 15.5 3.75 17.25 3.75 17.25C7 8 17 8 17 8Z" fill="var(--primary)"/></svg>';
+const emptyLeafSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-disabled)" stroke-width="1.5" stroke-linecap="round"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8 20C19 20 22 3 22 3C21 5 14 5.25 9 6.25C4 7.25 2 11.5 2 13.5C2 15.5 3.75 17.25 3.75 17.25C7 8 17 8 17 8Z" fill="var(--text-disabled)"/></svg>';
+const editSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-1px;margin-right:2px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+const dollarSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-1px;margin-right:2px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+
+function renderOverview() {
+  const key = selectedDate || todayKey;
+  const dayData = calendarData[key];
+
+  $ovTitle.innerHTML = `${leafSvg}${key.slice(5)} 概览`;
+
+  if (!dayData || (!dayData.events.length && !dayData.notes.length && !dayData.accounts?.length)) {
+    $ovContent.innerHTML = `<div class="ov-empty"><div class="ov-icon">${emptyLeafSvg}</div>尚无记录</div>`;
+    return;
+  }
+
+  let html = '';
+  [...dayData.events].sort((a, b) => a.start.localeCompare(b.start)).forEach(ev => {
+    html += `<div class="ov-item"><div class="ov-time">${escapeHtml(ev.start)}</div><div class="ov-title">${escapeHtml(ev.title)}</div>${ev.loc ? `<div class="ov-sub">${escapeHtml(ev.loc)}</div>` : ''}</div>`;
+  });
+
+  if (dayData.notes.length) {
+    html += `<div style="padding:6px 0 2px;font-size:11px;color:var(--text-secondary);letter-spacing:0.5px;font-weight:600">${editSvg}记事 ${dayData.notes.length} 则</div>`;
+  }
+
+  if (dayData.accounts?.length) {
+    const exp = dayData.accounts.filter(a => a.type === 'expense').reduce((s, a) => s + a.amount, 0);
+    const inc = dayData.accounts.filter(a => a.type === 'income').reduce((s, a) => s + a.amount, 0);
+    html += `<div style="padding:4px 0 2px;font-size:11px;color:var(--text-secondary);letter-spacing:0.5px;font-weight:600">${dollarSvg}支出 ¥${exp.toFixed(0)} · 收入 ¥${inc.toFixed(0)}</div>`;
+  }
+
+  $ovContent.innerHTML = html;
+}
+
+function selectDay(y, m, d) {
+  const key = dateKey(y, m, d);
+  if (selectedDate === key) {
+    openDay(key);
+  } else {
+    selectedDate = key;
+    renderCalendar();
+  }
+}
+
+function openDay(key) {
+  selectedDate = key;
+  const [, m, d] = key.split('-').map(Number);
+  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+  $dDisp.textContent = `${m}月${d}日`;
+  $dSub.textContent = `${key.split('-')[0]}年 ${weekdays[new Date(+key.split('-')[0], m - 1, d).getDay()]}`;
+  $moodBtn.innerHTML = getMoodIcon(getDateData(key).mood || '静');
+
+  renderEventsList();
+  renderAccountsList();
+
+  $calPage.classList.remove('active');
+  $dayPage.classList.add('active');
+  switchDayPanel('events');
+}
+
+function goBack() {
+  $dayPage.classList.remove('active');
+  $calPage.classList.add('active');
+  renderCalendar();
+}
+
+function switchDayPanel(panel) {
+  document.querySelectorAll('.day-main-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.panel === panel);
+  });
+  document.querySelectorAll('.day-panel').forEach(p => {
+    p.classList.toggle('active', p.id === `panel-${panel}`);
+  });
+  if (panel === 'accounts') renderCategoryGrid();
+}
+
+function renderEventsList() {
+  const dayData = getDateData(selectedDate);
+  const now = new Date();
+  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const isToday = selectedDate === todayKey;
+  const tagMap = { work: { label: '工作', className: 'tag-work' }, life: { label: '生活', className: 'tag-life' }, health: { label: '健康', className: 'tag-health' }, think: { label: '感悟', className: 'tag-think' } };
+
+  let html = '';
+  const sortedEvents = [...dayData.events].sort((a, b) => a.start.localeCompare(b.start));
+  sortedEvents.forEach((event, i) => {
+    const showNow = isToday && currentTime >= event.start && (i === sortedEvents.length - 1 || currentTime < sortedEvents[i + 1].start);
+    html += `<div class="tl-item"><div class="tl-time">${escapeHtml(event.start)}</div><div class="tl-line"><div class="tl-dot"></div><div class="tl-conn"></div></div><div class="tl-card"><div class="tl-title">${escapeHtml(event.title)}</div>${event.loc ? `<div class="tl-loc"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-1px;margin-right:2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escapeHtml(event.loc)}</div>` : ''}<div class="tl-acts"><button class="tl-act" onclick="editEvent(${event.id})">编辑</button><button class="tl-act danger" onclick="deleteItem('event',${event.id})">删除</button></div></div></div>`;
+    if (showNow) html += '<div class="now-indicator"><div class="now-line"></div><div class="now-label">此刻</div><div class="now-line"></div></div>';
+  });
+
+  if (dayData.notes.length) {
+    if (sortedEvents.length) html += '<div class="ink-divider"></div>';
+    [...dayData.notes].reverse().forEach(note => {
+      const tag = tagMap[note.tag] || tagMap.work;
+      html += `<div class="note-card"><div class="note-time">${escapeHtml(note.time || '')}</div><div class="note-content">${escapeHtml(note.content).replace(/\n/g, '<br>')}</div><span class="note-tag ${tag.className}">${tag.label}</span><div class="note-acts"><button class="n-act" onclick="editNote(${note.id})">改</button><button class="n-act" onclick="deleteItem('note',${note.id})">删</button></div></div>`;
+    });
+  }
+
+  $eventsList.innerHTML = html || '<div class="empty-state"><div class="em-icon">' + emptyLeafSvg + '</div><div class="em-text">尚无事件和记事</div></div>';
+}
+
+function renderAccountsList() {
+  const accounts = getDateData(selectedDate).accounts || [];
+  let html = '';
+
+  if (accounts.length) {
+    const expenses = accounts.filter(x => x.type === 'expense').reduce((s, x) => s + x.amount, 0);
+    const income = accounts.filter(x => x.type === 'income').reduce((s, x) => s + x.amount, 0);
+    html = `<div class="acc-summary"><div class="as-item"><div class="as-val" style="color:var(--error)">¥${expenses.toFixed(2)}</div><div class="as-label">支出</div></div><div class="as-item"><div class="as-val" style="color:var(--success)">¥${income.toFixed(2)}</div><div class="as-label">收入</div></div><div class="as-item"><div class="as-val" style="color:var(--text)">¥${(income - expenses).toFixed(2)}</div><div class="as-label">结余</div></div></div>`;
+
+    [...accounts].reverse().forEach(entry => {
+      const cat = getCategoryById(entry.cat);
+      const isExp = entry.type === 'expense';
+      html += `<div class="acc-entry"><div class="acc-icon">${cat.char}</div><div class="acc-info"><div class="acc-cat">${cat.name}</div>${entry.note ? `<div class="acc-note">${escapeHtml(entry.note)}</div>` : ''}</div><div class="acc-amt ${isExp ? 'exp' : 'inc'}">${isExp ? '-' : '+'}¥${entry.amount.toFixed(2)}</div><button class="acc-del" onclick="deleteAccount(${entry.id})">×</button></div>`;
+    });
+  } else {
+    html = '<div class="empty-state"><div class="em-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-disabled)" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="em-text">尚无记账记录</div></div>';
+  }
+
+  $accountsList.innerHTML = html;
+}
+
+function toggleAddForm(type) {
+  if (type === 'event') {
+    const form = document.getElementById('addEventForm');
+    const btn = form.previousElementSibling;
+    form.classList.toggle('show');
+    btn.style.display = form.classList.contains('show') ? 'none' : 'block';
+    if (form.classList.contains('show')) {
+      editingId = null;
+      document.getElementById('evTitle').value = '';
+      document.getElementById('evStart').value = '09:00';
+      document.getElementById('evEnd').value = '10:00';
+      document.getElementById('evLoc').value = '';
+      document.getElementById('ntText').value = '';
+      switchAddType('event');
+    }
+  } else {
+    const form = document.getElementById('addAccForm');
+    const btn = form.previousElementSibling;
+    form.classList.toggle('show');
+    btn.style.display = form.classList.contains('show') ? 'none' : 'block';
+    if (form.classList.contains('show')) {
+      document.getElementById('accAmt').value = '';
+      document.getElementById('accNt').value = '';
+      switchAccType('expense');
+    }
+  }
+}
+
+function switchAddType(type) {
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tp === type);
+  });
+  document.getElementById('addEvFields').style.display = type === 'event' ? 'block' : 'none';
+  document.getElementById('addNtFields').style.display = type === 'note' ? 'block' : 'none';
+  currentNoteType = type;
+}
+
+function pickTag(el) {
+  document.querySelectorAll('.tag-opt').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  selectedTag = el.dataset.tg;
+}
+
+function submitNewEvent() {
+  const dayData = getDateData(selectedDate);
+
+  if (currentNoteType === 'event') {
+    const title = document.getElementById('evTitle').value.trim();
+    if (!title) { showToast('请输入名称'); return; }
+    dayData.events.push({
+      id: Date.now(),
+      title: title,
+      start: document.getElementById('evStart').value,
+      end: document.getElementById('evEnd').value,
+      loc: document.getElementById('evLoc').value.trim()
+    });
+  } else {
+    const content = document.getElementById('ntText').value.trim();
+    if (!content) { showToast('请输入内容'); return; }
+    const now = new Date();
+    const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    dayData.notes.push({
+      id: Date.now(),
+      content: content,
+      tag: selectedTag,
+      time: time
+    });
+  }
+
+  save();
+  toggleAddForm('event');
+  renderEventsList();
+  renderCalendar();
+  showToast('已保存');
+}
+
+function submitNewAcc() {
+  const amount = parseFloat(document.getElementById('accAmt').value);
+  if (!amount || amount <= 0) { showToast('请输入金额'); return; }
+
+  const dayData = getDateData(selectedDate);
+  const now = new Date();
+  const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  dayData.accounts.push({
+    id: Date.now(),
+    type: accountType,
+    cat: selectedCategory,
+    amount: amount,
+    note: document.getElementById('accNt').value.trim(),
+    time: time
+  });
+
+  save();
+  toggleAddForm('account');
+  renderAccountsList();
+  renderCalendar();
+  showToast('已记录');
+}
+
+function switchAccType(type) {
+  accountType = type;
+  $('atE').className = 'acc-type-btn' + (type === 'expense' ? ' ae' : '');
+  $('atI').className = 'acc-type-btn' + (type === 'income' ? ' ai' : '');
+  renderCategoryGrid();
+}
+
+function renderCategoryGrid() {
+  const categories = accountType === 'expense' ? expenseCategories : incomeCategories;
+  $catG.innerHTML = categories.map(cat => `<div class="cat-btn${cat.id === selectedCategory ? ' active' : ''}" onclick="pickCategory('${cat.id}')"><div class="ci">${cat.char}</div><div class="cn">${cat.name}</div></div>`).join('');
+}
+
+function pickCategory(id) {
+  selectedCategory = id;
+  renderCategoryGrid();
+}
+
+function deleteAccount(id) {
+  if (!confirm('确定删除')) return;
+  const dayData = getDateData(selectedDate);
+  dayData.accounts = dayData.accounts.filter(a => a.id !== id);
+  save();
+  renderAccountsList();
+  renderCalendar();
+  showToast('已删除');
+}
+
+function editEvent(id) {
+  const dayData = getDateData(selectedDate);
+  const event = dayData.events.find(e => e.id === id);
+  if (!event) return;
+
+  toggleAddForm('event');
+  editingId = id;
+  document.getElementById('evTitle').value = event.title;
+  document.getElementById('evStart').value = event.start;
+  document.getElementById('evEnd').value = event.end;
+  document.getElementById('evLoc').value = event.loc || '';
+  switchAddType('event');
+}
+
+function editNote(id) {
+  const dayData = getDateData(selectedDate);
+  const note = dayData.notes.find(x => x.id === id);
+  if (!note) return;
+
+  toggleAddForm('event');
+  editingId = id;
+  document.getElementById('ntText').value = note.content;
+  selectedTag = note.tag;
+  document.querySelectorAll('.tag-opt').forEach(t => t.classList.toggle('active', t.dataset.tg === note.tag));
+  switchAddType('note');
+}
+
+function deleteItem(type, id) {
+  if (!confirm('确定删除')) return;
+  const dayData = getDateData(selectedDate);
+  if (type === 'event') {
+    dayData.events = dayData.events.filter(e => e.id !== id);
+  } else {
+    dayData.notes = dayData.notes.filter(n => n.id !== id);
+  }
+  save();
+  renderEventsList();
+  renderCalendar();
+  showToast('已删除');
+}
+
+function openMood() {
+  $moodBd.classList.add('show');
+  $moodPp.classList.add('show');
+}
+
+function closeMood() {
+  $moodBd.classList.remove('show');
+  $moodPp.classList.remove('show');
+}
+
+function setMood(mood) {
+  getDateData(selectedDate).mood = mood;
+  save();
+  $moodBtn.innerHTML = getMoodIcon(mood);
+  closeMood();
+  showToast(`心境：${mood}`);
+}
+
+function showToast(message) {
+  $toast.textContent = message;
+  $toast.classList.add('show');
+  setTimeout(() => $toast.classList.remove('show'), 1800);
+}
+
+selectedCategory = 'food';
+currentYear = today.getFullYear();
+currentMonth = today.getMonth();
+loadData();
+renderCalendar();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('PWA 离线缓存已启用'))
+      .catch(err => console.log('Service Worker 注册失败', err));
+  });
+}
+
+</script>
+</body>
+</html>
