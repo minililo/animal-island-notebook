@@ -16,43 +16,28 @@
 <style>
   :root {
     --primary: #5cc8b9;
-    --primary-hover: #7dd4c6;
-    --primary-active: #48a89b;
     --primary-bg: #eafaf6;
     --text: #6b5040;
     --text-body: #5e4835;
     --text-secondary: #9a8878;
-    --text-muted: #8a7b66;
     --text-disabled: #c4b89e;
     --bg: #fdf8f0;
     --bg-content: #faf5eb;
     --bg-disabled: #f0ece2;
     --border: #d4c8b8;
-    --border-hover: #b8a890;
-    --border-strong: #a89880;
     --success: #7cc85a;
-    --success-active: #5ea83a;
     --warning: #f5c84a;
     --warning-active: #d8a830;
     --error: #e88080;
-    --error-active: #d06060;
     --focus-yellow: #ffe066;
     --shadow-btn: #c8b8a4;
     --shadow-input: #d8cbb8;
     --r-pill: 50px;
     --ease: cubic-bezier(0.4, 0, 0.2, 1);
-    --d-fast: 0.15s;
-    --d-base: 0.25s;
-    --d-slow: 0.35s;
     --radius: 20px;
     --radius-sm: 16px;
-    --ochre: #5cc8b9;
-    --ochre-light: rgba(92,200,185,0.08);
     --ochre-mid: rgba(92,200,185,0.2);
-    --pink: #f0a0b0;
     --pink-bg: #fef0f2;
-    --mint: #80d0b8;
-    --mint-bg: #e8f8f2;
     --lavender: #b898d8;
     --lavender-bg: #f4eefc;
     --peach: #f0b090;
@@ -80,7 +65,7 @@
   .page { display:none; min-height:100vh; position:relative; z-index:1; }
   .page.active { display:block; }
 
-  .cal-page { padding:0 16px 100px; }
+  .cal-page { padding:0 16px 100px; overflow:hidden; }
 
   .status-bar {
     display:flex; justify-content:space-between; align-items:center;
@@ -94,7 +79,52 @@
     letter-spacing:1px;
   }
   .cal-header .month-title span { color:var(--primary); font-weight:800; }
-  .cal-header .nav-btns { display:flex; gap:8px; }
+  .cal-header .nav-btns { display:flex; gap:8px; align-items:center; }
+  .search-btn {
+    width:36px; height:36px; border-radius:50%; cursor:pointer;
+    border:none; background:var(--bg-content);
+    color:var(--text); display:flex; align-items:center; justify-content:center;
+    transition:all 0.15s var(--ease); font-family:inherit;
+    box-shadow:0 3px 0 0 var(--shadow-btn);
+  }
+  .search-btn:hover { transform:translateY(-1px); box-shadow:0 4px 0 0 var(--shadow-btn); color:var(--primary); }
+  .search-btn:active { transform:translateY(2px); box-shadow:0 1px 0 0 var(--shadow-btn); }
+
+  .date-picker-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35);
+    z-index:140; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  }
+  .date-picker-overlay.show { display:flex; align-items:center; justify-content:center; animation:fadeIn 0.25s ease; }
+  .date-picker-box {
+    width:300px; border-radius:var(--radius); padding:24px 20px 20px;
+    border:1.5px solid #d8ccb8;
+    box-shadow:0 8px 24px rgba(90,72,52,0.14);
+    background:
+      radial-gradient(circle, rgba(200,188,168,0.12) 1.5px, transparent 1.5px) 0 0/28px 28px,
+      radial-gradient(circle, rgba(200,188,168,0.08) 1px, transparent 1px) 7px 7px/14px 14px,
+      var(--bg-content);
+    animation:fadeIn 0.25s ease;
+  }
+  .dp-title { font-size:15px; font-weight:700; text-align:center; color:var(--text); margin-bottom:18px; letter-spacing:1px; }
+  .dp-title svg { vertical-align:-3px; margin-right:4px; }
+  .dp-row { display:flex; gap:10px; justify-content:center; margin-bottom:16px; }
+  .dp-field { text-align:center; flex:1; }
+  .dp-label { font-size:10px; color:var(--text-secondary); margin-bottom:6px; letter-spacing:0.5px; font-weight:600; }
+  .dp-select {
+    width:100%; padding:10px 4px; border-radius:var(--r-pill);
+    border:2px solid var(--border); font-size:15px; font-weight:600;
+    text-align:center; font-family:inherit; color:var(--text-body);
+    background:var(--bg-content); outline:none; cursor:pointer;
+    box-shadow:0 2px 0 0 var(--shadow-input);
+    -webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239a8878' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 10px center;
+    padding-right:24px;
+  }
+  .dp-select:focus { border-color:var(--focus-yellow); box-shadow:0 2px 0 0 var(--warning-active); background-color:#fff; }
+  .dp-actions { display:flex; gap:8px; margin-top:4px; }
+  .dp-actions .submit-btn { flex:1; margin-top:0; }
+  .dp-actions .cancel-btn { margin-top:0; }
   .nav-btn {
     width:36px; height:36px; border-radius:50%; cursor:pointer;
     border:none; background:var(--bg-content);
@@ -138,6 +168,7 @@
     box-shadow:0 3px 0 0 #3a988a;
   }
   .cal-day.today:active .day-num { transform:translateY(2px); box-shadow:0 1px 0 0 #3a988a; }
+  .cal-day .day-num.highlighted { box-shadow:0 3px 0 0 var(--shadow-btn); }
   .cal-day.selected .day-num {
     background:var(--warning); color:var(--text); font-weight:700;
     box-shadow:0 1px 0 0 var(--warning-active);
@@ -162,7 +193,7 @@
   .month-summary {
     margin:12px 0 0; padding:16px 8px;
     display:flex; justify-content:space-around;
-    border-radius:var(--radius); background:var(--bg-content);
+    border-radius:var(--radius);
     border:1.5px solid #d8ccb8;
     background:
       radial-gradient(circle, rgba(200,188,168,0.15) 1.5px, transparent 1.5px) 0 0/28px 28px,
@@ -178,12 +209,12 @@
 
   .overview-card {
     margin:12px 0 0; padding:18px; border-radius:var(--radius);
-    background:var(--bg-content); border:1.5px solid #d8ccb8;
+    border:1.5px solid #88d8c0;
+    overflow:hidden;
     background:
       radial-gradient(circle, rgba(92,200,185,0.1) 1.5px, transparent 1.5px) 0 0/28px 28px,
       radial-gradient(circle, rgba(92,200,185,0.07) 1px, transparent 1px) 7px 7px/14px 14px,
       #e8f8f2;
-    border:1.5px solid #88d8c0;
   }
   .card-title {
     font-size:13px; color:var(--text-body); margin-bottom:14px;
@@ -194,9 +225,9 @@
   }
   .ov-item { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid rgba(92,200,185,0.1); }
   .ov-item:last-child { border-bottom:none; }
-  .ov-time { font-size:12px; color:var(--primary); font-weight:700; min-width:40px; }
-  .ov-title { font-size:13px; color:var(--text-body); flex:1; font-weight:600; }
-  .ov-sub { font-size:11px; color:var(--text-secondary); }
+  .ov-time { font-size:12px; color:var(--primary); font-weight:700; min-width:40px; flex-shrink:0; }
+  .ov-title { font-size:13px; color:var(--text-body); flex:1; min-width:0; font-weight:600; word-wrap:break-word; overflow-wrap:break-word; white-space:normal; }
+  .ov-sub { font-size:11px; color:var(--text-secondary); word-wrap:break-word; overflow-wrap:break-word; }
   .ov-empty { text-align:center; padding:28px 0; color:var(--text-disabled); font-size:13px; letter-spacing:1px; font-weight:500; }
   .ov-empty .ov-icon { font-size:28px; margin-bottom:8px; }
 
@@ -251,6 +282,9 @@
   .day-panel.active { display:flex; }
 
   .day-list { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:8px; }
+  .day-list > .tl-item { content-visibility:auto; contain-intrinsic-size:0 60px; }
+  .day-list > .note-card { content-visibility:auto; contain-intrinsic-size:0 80px; }
+  .day-list > .acc-entry { content-visibility:auto; contain-intrinsic-size:0 50px; }
 
   .day-add-bar {
     flex-shrink:0; padding:10px 0; border-top:1px solid rgba(92,200,185,0.1);
@@ -273,15 +307,15 @@
   .tl-dot { width:8px; height:8px; border-radius:50%; background:var(--primary); flex-shrink:0; box-shadow:0 0 0 3px rgba(92,200,185,0.15); }
   .tl-conn { width:1.5px; flex:1; background:var(--ochre-mid); margin:3px 0; }
   .tl-card {
-    flex:1; padding:12px 14px; margin-bottom:8px; border-radius:var(--radius-sm);
-    background:var(--bg-content); border:1.5px solid #d8ccb8;
+    flex:1; min-width:0; padding:12px 14px; margin-bottom:8px; border-radius:var(--radius-sm);
+    border:1.5px solid #d8ccb8;
     background:
       radial-gradient(circle, rgba(200,188,168,0.12) 1.5px, transparent 1.5px) 0 0/28px 28px,
       radial-gradient(circle, rgba(200,188,168,0.08) 1px, transparent 1px) 7px 7px/14px 14px,
       var(--bg-content);
   }
-  .tl-card .tl-title { font-size:13px; color:var(--text-body); font-weight:600; }
-  .tl-card .tl-loc { font-size:11px; color:var(--text-secondary); margin-top:3px; }
+  .tl-card .tl-title { font-size:13px; color:var(--text-body); font-weight:600; word-wrap:break-word; overflow-wrap:break-word; white-space:normal; }
+  .tl-card .tl-loc { font-size:11px; color:var(--text-secondary); margin-top:3px; word-wrap:break-word; overflow-wrap:break-word; white-space:normal; }
   .tl-card .tl-acts { display:flex; gap:6px; margin-top:8px; }
   .tl-act {
     padding:5px 14px; border-radius:var(--r-pill); font-size:11px; cursor:pointer;
@@ -301,16 +335,15 @@
 
   .note-card {
     padding:14px; margin-bottom:8px; border-radius:var(--radius-sm);
-    background:var(--bg-content); border:1.5px solid #d8ccb8;
-    position:relative;
+    position:relative; overflow:hidden;
+    border:1.5px solid #f5d060;
     background:
       radial-gradient(circle, rgba(245,200,74,0.12) 1.5px, transparent 1.5px) 0 0/28px 28px,
       radial-gradient(circle, rgba(245,200,74,0.08) 1px, transparent 1px) 7px 7px/14px 14px,
       #fef8e8;
-    border:1.5px solid #f5d060;
   }
   .note-time { font-size:10px; color:var(--text-disabled); margin-bottom:6px; letter-spacing:0.5px; font-weight:600; }
-  .note-content { font-size:13px; line-height:1.75; color:var(--text-body); font-weight:500; }
+  .note-content { font-size:13px; line-height:1.75; color:var(--text-body); font-weight:500; word-wrap:break-word; overflow-wrap:break-word; }
   .note-tag {
     display:inline-block; padding:3px 10px; border-radius:var(--r-pill);
     font-size:10px; margin-top:8px; letter-spacing:0.3px; font-weight:700;
@@ -376,35 +409,9 @@
   .em-icon { font-size:28px; margin-bottom:8px; }
   .em-text { font-size:12px; letter-spacing:1px; font-weight:500; }
 
-  .fab {
-    position:fixed; bottom:28px; right:20px; width:52px; height:52px;
-    border-radius:50%; background:var(--primary); color:#fff; border:none;
-    font-size:24px; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-    transition:all 0.15s var(--ease); z-index:10; font-family:inherit; font-weight:700;
-    box-shadow:0 5px 0 0 #3a988a;
-  }
-  .fab:hover { transform:translateY(-1px); box-shadow:0 6px 0 0 #3a988a; }
-  .fab:active { transform:translateY(3px); box-shadow:0 2px 0 0 #3a988a; }
-
-  .modal-overlay {
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35);
-    z-index:100; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-    animation:fadeIn 0.25s ease;
-  }
-  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  .modal-overlay.show { display:flex; align-items:flex-end; justify-content:center; }
-  .modal-sheet {
-    width:100%; max-width:430px; margin:0 auto;
-    border-radius:24px 24px 0 0; padding:14px 22px 40px;
-    animation:slideUp 0.35s cubic-bezier(0.32,0.72,0,1);
-    max-height:85vh; overflow-y:auto;
-    background:var(--bg-content); border-top:1.5px solid #d8ccb8;
-    box-shadow:0 -4px 30px rgba(90,72,52,0.12);
-  }
-  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
   .modal-handle { width:32px; height:3px; background:var(--text-disabled); border-radius:2px; margin:0 auto 18px; opacity:0.5; }
-  .modal-title { font-size:18px; font-weight:700; margin-bottom:18px; text-align:center; color:var(--text); letter-spacing:1px; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
 
   .input-group { margin-bottom:14px; }
   .input-label { font-size:12px; color:var(--text-secondary); margin-bottom:6px; display:block; letter-spacing:0.5px; font-weight:600; }
@@ -487,12 +494,12 @@
   .cat-btn .ci { font-size:14px; color:var(--primary); font-weight:700; display:flex; align-items:center; justify-content:center; }
   .cat-btn .cn { font-size:10px; color:var(--text-secondary); letter-spacing:0.3px; font-weight:600; }
 
-  .mood-bd { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); backdrop-filter:blur(4px); z-index:140; }
+  .mood-bd { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:140; }
   .mood-bd.show { display:block; }
   .mood-pp {
     display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
     border-radius:var(--radius); padding:28px; z-index:150; text-align:center;
-    background:var(--bg-content); border:1.5px solid #d8ccb8;
+    border:1.5px solid #d8ccb8;
     box-shadow:0 8px 24px rgba(90,72,52,0.14);
     background:
       radial-gradient(circle, rgba(200,188,168,0.12) 1.5px, transparent 1.5px) 0 0/28px 28px,
@@ -523,6 +530,99 @@
   .toast.show { opacity:1; }
 
   ::-webkit-scrollbar { width:0; height:0; }
+
+  .hl-picker-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35);
+    z-index:140; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  }
+  .hl-picker-overlay.show { display:flex; align-items:flex-end; justify-content:center; animation:fadeIn 0.25s ease; }
+  .hl-picker-box {
+    width:100%; max-width:430px; margin:0 auto; max-height:80vh; overflow-y:auto;
+    border-radius:24px 24px 0 0; padding:14px 22px 40px;
+    animation:slideUp 0.35s cubic-bezier(0.32,0.72,0,1);
+    background:var(--bg-content); border-top:1.5px solid #d8ccb8;
+    box-shadow:0 -4px 30px rgba(90,72,52,0.12);
+  }
+  .hl-title { font-size:15px; font-weight:700; text-align:center; color:var(--text); margin-bottom:4px; letter-spacing:1px; }
+  .hl-date { font-size:12px; color:var(--text-secondary); text-align:center; margin-bottom:16px; font-weight:500; }
+  .hl-section { margin-bottom:16px; }
+  .hl-section-title {
+    font-size:11px; color:var(--text-secondary); font-weight:600; letter-spacing:0.5px;
+    margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid rgba(92,200,185,0.1);
+    display:flex; align-items:center; gap:4px;
+  }
+  .hl-section-title svg { vertical-align:-1px; }
+  .hl-select-all {
+    margin-left:auto; font-size:11px; color:var(--primary); cursor:pointer;
+    font-weight:600; padding:2px 8px; border-radius:var(--r-pill);
+    transition:all 0.15s var(--ease); letter-spacing:0;
+  }
+  .hl-select-all:hover { background:var(--primary-bg); }
+  .hl-select-all:active { transform:scale(0.95); }
+  .hl-colors { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .hl-dot {
+    width:38px; height:38px; border-radius:50%; cursor:pointer;
+    border:3px solid transparent; transition:all 0.15s var(--ease);
+    box-shadow:0 3px 0 0 rgba(0,0,0,0.1);
+  }
+  .hl-dot:hover { transform:translateY(-2px); box-shadow:0 5px 0 0 rgba(0,0,0,0.1); }
+  .hl-dot:active { transform:translateY(1px); box-shadow:0 1px 0 0 rgba(0,0,0,0.1); }
+  .hl-dot.active { border-color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+  .hl-custom { display:flex; gap:8px; justify-content:center; align-items:center; margin-top:10px; }
+  .hl-color-input {
+    width:34px; height:34px; border:2px solid var(--border); border-radius:50%;
+    cursor:pointer; padding:0; background:none; flex-shrink:0;
+    box-shadow:0 2px 0 0 var(--shadow-btn);
+  }
+  .hl-color-input::-webkit-color-swatch-wrapper { padding:2px; }
+  .hl-color-input::-webkit-color-swatch { border:none; border-radius:50%; }
+  .hl-color-input::-moz-color-swatch { border:none; border-radius:50%; }
+  .hl-custom-btn {
+    padding:6px 16px; border-radius:var(--r-pill); cursor:pointer;
+    border:none; background:var(--primary); color:#fff;
+    font-size:11px; font-family:inherit; font-weight:600;
+    transition:all 0.15s var(--ease); flex-shrink:0;
+    box-shadow:0 2px 0 0 #3a988a;
+  }
+  .hl-custom-btn:hover { transform:translateY(-1px); box-shadow:0 3px 0 0 #3a988a; }
+  .hl-custom-btn:active { transform:translateY(1px); box-shadow:0 1px 0 0 #3a988a; }
+  .hl-clear-list { display:flex; flex-direction:column; gap:8px; }
+  .hl-clear-item {
+    display:flex; align-items:center; gap:10px; padding:8px 12px;
+    border-radius:12px; background:var(--bg); cursor:pointer;
+    transition:all 0.15s var(--ease);
+  }
+  .hl-clear-item:active { transform:scale(0.98); }
+  .hl-check {
+    width:20px; height:20px; border-radius:6px; flex-shrink:0;
+    border:2px solid var(--border); background:var(--bg-content);
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.15s var(--ease); color:transparent;
+    box-shadow:0 1px 0 0 var(--shadow-btn);
+  }
+  .hl-clear-item.selected .hl-check {
+    border-color:var(--primary); background:var(--primary); color:#fff;
+  }
+  .hl-check-icon { font-size:12px; font-weight:700; }
+  .hl-clear-label { font-size:12px; color:var(--text-body); font-weight:600; flex:1; }
+  .hl-clear-badge {
+    font-size:10px; color:var(--text-secondary); background:var(--bg-content);
+    padding:2px 8px; border-radius:var(--r-pill); font-weight:600;
+  }
+  .hl-clear-badge.empty { color:var(--text-disabled); }
+  .hl-divider { height:1px; background:rgba(92,200,185,0.1); margin:14px 0; }
+  .hl-clear-btn {
+    width:100%; padding:10px; border-radius:var(--r-pill); cursor:pointer;
+    border:2px solid var(--error); background:transparent;
+    color:var(--error); font-size:12px; font-family:inherit; font-weight:600;
+    transition:all 0.15s var(--ease); margin-top:10px;
+  }
+  .hl-clear-btn:hover { background:var(--error); color:#fff; }
+  .hl-clear-btn:active { transform:translateY(1px); }
+  .hl-clear-btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .hl-clear-btn:disabled:hover { background:transparent; color:var(--error); }
+  .hl-bottom { display:flex; gap:8px; margin-top:14px; }
+  .hl-bottom .cancel-btn { flex:1; margin-top:0; }
 </style>
 </head>
 <body>
@@ -538,6 +638,7 @@
         <div class="nav-btn" onclick="changeMonth(-1)">‹</div>
         <div class="nav-btn" onclick="changeMonth(0)">今</div>
         <div class="nav-btn" onclick="changeMonth(1)">›</div>
+        <div class="search-btn" onclick="openDatePicker()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
       </div>
     </div>
     <div class="weekday-row">
@@ -562,6 +663,7 @@
         <div class="date-sub" id="dSub"></div>
       </div>
       <button class="mood-btn" id="moodBtn" onclick="openMood()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8 20C19 20 22 3 22 3C21 5 14 5.25 9 6.25C4 7.25 2 11.5 2 13.5C2 15.5 3.75 17.25 3.75 17.25C7 8 17 8 17 8Z" stroke="var(--primary)" stroke-width="1.5" fill="var(--primary-bg)"/></svg></button>
+      <button class="mood-btn" id="hlBtn" onclick="openHighlightFromDay()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg></button>
     </div>
 
     <div class="day-main-tabs">
@@ -631,6 +733,60 @@
   </div>
 </div>
 
+<div class="date-picker-overlay" id="datePickerOverlay" onclick="closeDatePicker()">
+  <div class="date-picker-box" onclick="event.stopPropagation()">
+    <div class="dp-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>跳转到日期</div>
+    <div class="dp-row">
+      <div class="dp-field"><div class="dp-label">年</div><select class="dp-select" id="dpYear"></select></div>
+      <div class="dp-field"><div class="dp-label">月</div><select class="dp-select" id="dpMonth"></select></div>
+      <div class="dp-field"><div class="dp-label">日</div><select class="dp-select" id="dpDay"></select></div>
+    </div>
+    <div class="dp-actions">
+      <button class="submit-btn" style="flex:1" onclick="jumpToDate()">跳转</button>
+      <button class="cancel-btn" onclick="closeDatePicker()">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="hl-picker-overlay" id="hlOverlay" onclick="closeHighlightPicker()">
+  <div class="hl-picker-box" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="hl-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/></svg>
+      日期管理
+    </div>
+    <div class="hl-date" id="hlDateText"></div>
+
+    <div class="hl-section">
+      <div class="hl-section-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+        高亮标记
+      </div>
+      <div class="hl-colors" id="hlColors"></div>
+      <div class="hl-custom">
+        <input type="color" id="hlColorInput" value="#5cc8b9" class="hl-color-input">
+        <button class="hl-custom-btn" onclick="setHighlight(document.getElementById('hlColorInput').value)">应用自定义</button>
+      </div>
+    </div>
+
+    <div class="hl-divider"></div>
+
+    <div class="hl-section">
+      <div class="hl-section-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        清除数据
+        <span class="hl-select-all" id="hlSelectAll" onclick="toggleSelectAll()">全选</span>
+      </div>
+      <div class="hl-clear-list" id="hlClearList"></div>
+      <button class="hl-clear-btn" id="hlClearBtn" onclick="clearDateData()" disabled>清除选中数据</button>
+    </div>
+
+    <div class="hl-bottom">
+      <button class="cancel-btn" style="flex:1;margin-top:0" onclick="closeHighlightPicker()">关闭</button>
+    </div>
+  </div>
+</div>
+
 <div class="mood-bd" id="moodBd" onclick="closeMood()"></div>
 <div class="mood-pp" id="moodPp">
   <div class="mp-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" style="vertical-align:-3px;margin-right:4px"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8 20C19 20 22 3 22 3C21 5 14 5.25 9 6.25C4 7.25 2 11.5 2 13.5C2 15.5 3.75 17.25 3.75 17.25C7 8 17 8 17 8Z" fill="var(--primary)"/></svg>今日心境</div>
@@ -663,6 +819,17 @@ const $toast = $('toast');
 const $moodBd = $('moodBd');
 const $moodPp = $('moodPp');
 const $clock = $('clock');
+const $hlOverlay = $('hlOverlay');
+const $hlColors = $('hlColors');
+const $hlDateText = $('hlDateText');
+const $hlColorInput = $('hlColorInput');
+const $hlClearList = $('hlClearList');
+const $hlClearBtn = $('hlClearBtn');
+const $datePickerOverlay = $('datePickerOverlay');
+const $dpYear = $('dpYear');
+const $dpMonth = $('dpMonth');
+const $dpDay = $('dpDay');
+const $hlBtn = $('hlBtn');
 
 let calendarData = {};
 let currentYear, currentMonth, selectedDate;
@@ -681,18 +848,30 @@ function dateKey(y, m, d) {
 
 function getDateData(key) {
   if (!calendarData[key]) {
-    calendarData[key] = { events: [], notes: [], mood: '静', accounts: [] };
+    calendarData[key] = { events: [], notes: [], mood: '静', accounts: [], highlight: null };
   }
   if (!calendarData[key].accounts) {
     calendarData[key].accounts = [];
   }
+  if (!('highlight' in calendarData[key])) {
+    calendarData[key].highlight = null;
+  }
   return calendarData[key];
 }
 
+const highlightColors = [
+  { name: '薄荷', value: '#5cc8b9' },
+  { name: '蜜桃', value: '#f0a0b0' },
+  { name: '薰衣草', value: '#b898d8' },
+  { name: '柠檬', value: '#f5c84a' },
+  { name: '珊瑚', value: '#f0b090' },
+  { name: '天空', value: '#80b8d8' }
+];
+
+const _escDiv = document.createElement('div');
 function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  _escDiv.textContent = text;
+  return _escDiv.innerHTML;
 }
 
 const moodIcons = {
@@ -748,8 +927,8 @@ function loadData() {
     calendarData = {};
   }
 
-  const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
-  const todayData = getDateData(todayKey);
+  const todayDateKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const todayData = getDateData(todayDateKey);
 
   if (!todayData.events.length) {
     todayData.events = [
@@ -844,7 +1023,14 @@ function renderCalendar() {
       if (key === todayKey) cls += ' today';
       if (key === selectedDate) cls += ' selected';
 
-      html += `<div class="${cls}" onclick="selectDay(${currentYear},${currentMonth},${day})"><div class="day-num">${day}</div><div class="dot-row">${dots}</div>${total}</div>`;
+      let dayNumCls = 'day-num';
+      let hlStyle = '';
+      if (dayData?.highlight) {
+        dayNumCls += ' highlighted';
+        hlStyle = ` background:${dayData.highlight}40;`;
+      }
+
+      html += `<div class="${cls}" onclick="selectDay(${currentYear},${currentMonth},${day})"><div class="${dayNumCls}" style="${hlStyle}">${day}</div><div class="dot-row">${dots}</div>${total}</div>`;
     }
   }
 
@@ -938,6 +1124,15 @@ function openDay(key) {
   $dSub.textContent = `${key.split('-')[0]}年 ${weekdays[new Date(+key.split('-')[0], m - 1, d).getDay()]}`;
   $moodBtn.innerHTML = getMoodIcon(getDateData(key).mood || '静');
 
+  const hl = getDateData(key).highlight;
+  if (hl) {
+    $hlBtn.style.background = hl + '40';
+    $hlBtn.style.boxShadow = `0 3px 0 0 ${hl}80`;
+  } else {
+    $hlBtn.style.background = '';
+    $hlBtn.style.boxShadow = '';
+  }
+
   renderEventsList();
   renderAccountsList();
 
@@ -971,9 +1166,11 @@ function renderEventsList() {
 
   let html = '';
   const sortedEvents = [...dayData.events].sort((a, b) => a.start.localeCompare(b.start));
+  const locSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-1px;margin-right:2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
   sortedEvents.forEach((event, i) => {
     const showNow = isToday && currentTime >= event.start && (i === sortedEvents.length - 1 || currentTime < sortedEvents[i + 1].start);
-    html += `<div class="tl-item"><div class="tl-time">${escapeHtml(event.start)}</div><div class="tl-line"><div class="tl-dot"></div><div class="tl-conn"></div></div><div class="tl-card"><div class="tl-title">${escapeHtml(event.title)}</div>${event.loc ? `<div class="tl-loc"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-1px;margin-right:2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${escapeHtml(event.loc)}</div>` : ''}<div class="tl-acts"><button class="tl-act" onclick="editEvent(${event.id})">编辑</button><button class="tl-act danger" onclick="deleteItem('event',${event.id})">删除</button></div></div></div>`;
+    const locHtml = event.loc ? `<div class="tl-loc">${locSvg}${escapeHtml(event.loc)}</div>` : '';
+    html += `<div class="tl-item"><div class="tl-time">${escapeHtml(event.start)}</div><div class="tl-line"><div class="tl-dot"></div><div class="tl-conn"></div></div><div class="tl-card"><div class="tl-title">${escapeHtml(event.title)}</div>${locHtml}<div class="tl-acts"><button class="tl-act" onclick="editEvent(${event.id})">编辑</button><button class="tl-act danger" onclick="deleteItem('event',${event.id})">删除</button></div></div></div>`;
     if (showNow) html += '<div class="now-indicator"><div class="now-line"></div><div class="now-label">此刻</div><div class="now-line"></div></div>';
   });
 
@@ -981,7 +1178,8 @@ function renderEventsList() {
     if (sortedEvents.length) html += '<div class="ink-divider"></div>';
     [...dayData.notes].reverse().forEach(note => {
       const tag = tagMap[note.tag] || tagMap.work;
-      html += `<div class="note-card"><div class="note-time">${escapeHtml(note.time || '')}</div><div class="note-content">${escapeHtml(note.content).replace(/\n/g, '<br>')}</div><span class="note-tag ${tag.className}">${tag.label}</span><div class="note-acts"><button class="n-act" onclick="editNote(${note.id})">改</button><button class="n-act" onclick="deleteItem('note',${note.id})">删</button></div></div>`;
+      const content = escapeHtml(note.content).replace(/\n/g, '<br>');
+      html += `<div class="note-card"><div class="note-time">${escapeHtml(note.time || '')}</div><div class="note-content">${content}</div><span class="note-tag ${tag.className}">${tag.label}</span><div class="note-acts"><button class="n-act" onclick="editNote(${note.id})">改</button><button class="n-act" onclick="deleteItem('note',${note.id})">删</button></div></div>`;
     });
   }
 
@@ -995,12 +1193,20 @@ function renderAccountsList() {
   if (accounts.length) {
     const expenses = accounts.filter(x => x.type === 'expense').reduce((s, x) => s + x.amount, 0);
     const income = accounts.filter(x => x.type === 'income').reduce((s, x) => s + x.amount, 0);
-    html = `<div class="acc-summary"><div class="as-item"><div class="as-val" style="color:var(--error)">¥${expenses.toFixed(2)}</div><div class="as-label">支出</div></div><div class="as-item"><div class="as-val" style="color:var(--success)">¥${income.toFixed(2)}</div><div class="as-label">收入</div></div><div class="as-item"><div class="as-val" style="color:var(--text)">¥${(income - expenses).toFixed(2)}</div><div class="as-label">结余</div></div></div>`;
+    const balance = (income - expenses).toFixed(2);
+    html = `<div class="acc-summary">
+      <div class="as-item"><div class="as-val" style="color:var(--error)">¥${expenses.toFixed(2)}</div><div class="as-label">支出</div></div>
+      <div class="as-item"><div class="as-val" style="color:var(--success)">¥${income.toFixed(2)}</div><div class="as-label">收入</div></div>
+      <div class="as-item"><div class="as-val" style="color:var(--text)">¥${balance}</div><div class="as-label">结余</div></div>
+    </div>`;
 
     [...accounts].reverse().forEach(entry => {
       const cat = getCategoryById(entry.cat);
       const isExp = entry.type === 'expense';
-      html += `<div class="acc-entry"><div class="acc-icon">${cat.char}</div><div class="acc-info"><div class="acc-cat">${cat.name}</div>${entry.note ? `<div class="acc-note">${escapeHtml(entry.note)}</div>` : ''}</div><div class="acc-amt ${isExp ? 'exp' : 'inc'}">${isExp ? '-' : '+'}¥${entry.amount.toFixed(2)}</div><button class="acc-del" onclick="deleteAccount(${entry.id})">×</button></div>`;
+      const amtClass = isExp ? 'exp' : 'inc';
+      const amtSign = isExp ? '-' : '+';
+      const noteHtml = entry.note ? `<div class="acc-note">${escapeHtml(entry.note)}</div>` : '';
+      html += `<div class="acc-entry"><div class="acc-icon">${cat.char}</div><div class="acc-info"><div class="acc-cat">${cat.name}</div>${noteHtml}</div><div class="acc-amt ${amtClass}">${amtSign}¥${entry.amount.toFixed(2)}</div><button class="acc-del" onclick="deleteAccount(${entry.id})">×</button></div>`;
     });
   } else {
     html = '<div class="empty-state"><div class="em-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-disabled)" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="em-text">尚无记账记录</div></div>';
@@ -1118,7 +1324,9 @@ function switchAccType(type) {
 
 function renderCategoryGrid() {
   const categories = accountType === 'expense' ? expenseCategories : incomeCategories;
-  $catG.innerHTML = categories.map(cat => `<div class="cat-btn${cat.id === selectedCategory ? ' active' : ''}" onclick="pickCategory('${cat.id}')"><div class="ci">${cat.char}</div><div class="cn">${cat.name}</div></div>`).join('');
+  $catG.innerHTML = categories.map(cat =>
+    `<div class="cat-btn${cat.id === selectedCategory ? ' active' : ''}" onclick="pickCategory('${cat.id}')"><div class="ci">${cat.char}</div><div class="cn">${cat.name}</div></div>`
+  ).join('');
 }
 
 function pickCategory(id) {
@@ -1195,13 +1403,195 @@ function setMood(mood) {
   showToast(`心境：${mood}`);
 }
 
+let hlPickerKey = null;
+let hlClearSelected = new Set();
+
+function openHighlightPicker(dateKey) {
+  hlPickerKey = dateKey;
+  hlClearSelected.clear();
+  const [, m, d] = dateKey.split('-').map(Number);
+  $hlDateText.textContent = `${m}月${d}日`;
+  const dayData = getDateData(dateKey);
+  const currentColor = dayData.highlight;
+
+  $hlColors.innerHTML = highlightColors.map(c =>
+    `<div class="hl-dot${currentColor === c.value ? ' active' : ''}" style="background:${c.value}" data-color="${c.value}" onclick="pickHighlightColor('${c.value}')" title="${c.name}"></div>`
+  ).join('');
+
+  $hlColorInput.value = currentColor || '#5cc8b9';
+
+  const evCount = dayData.events.length;
+  const ntCount = dayData.notes.length;
+  const acCount = dayData.accounts.length;
+  const hlHas = !!dayData.highlight;
+
+  $hlClearList.innerHTML = [
+    { key: 'events', label: '事件记录', count: evCount, badge: evCount ? `${evCount}条` : '无', empty: !evCount },
+    { key: 'notes', label: '记事记录', count: ntCount, badge: ntCount ? `${ntCount}条` : '无', empty: !ntCount },
+    { key: 'accounts', label: '记账记录', count: acCount, badge: acCount ? `${acCount}条` : '无', empty: !acCount },
+    { key: 'highlight', label: '颜色标记', count: hlHas ? 1 : 0, badge: hlHas ? '已标记' : '无', empty: !hlHas }
+  ].map(item => `
+    <div class="hl-clear-item" data-key="${item.key}" onclick="toggleClearItem(this,'${item.key}')">
+      <div class="hl-check"><span class="hl-check-icon">✓</span></div>
+      <div class="hl-clear-label">${item.label}</div>
+      <div class="hl-clear-badge${item.empty ? ' empty' : ''}">${item.badge}</div>
+    </div>
+  `).join('');
+
+  $hlClearBtn.disabled = true;
+  document.getElementById('hlSelectAll').textContent = '全选';
+  $hlOverlay.classList.add('show');
+}
+
+function openHighlightFromDay() {
+  if (selectedDate) openHighlightPicker(selectedDate);
+}
+
+function pickHighlightColor(color) {
+  $hlColorInput.value = color;
+  document.querySelectorAll('.hl-dot').forEach(d => {
+    d.classList.toggle('active', d.dataset.color === color);
+  });
+  setHighlight(color);
+}
+
+function setHighlight(color) {
+  if (!hlPickerKey) return;
+  calendarData[hlPickerKey].highlight = color;
+  save();
+  renderCalendar();
+  showToast('已标记');
+}
+
+function toggleClearItem(el, key) {
+  el.classList.toggle('selected');
+  if (hlClearSelected.has(key)) {
+    hlClearSelected.delete(key);
+  } else {
+    hlClearSelected.add(key);
+  }
+  updateSelectAllState();
+  $hlClearBtn.disabled = hlClearSelected.size === 0;
+}
+
+function toggleSelectAll() {
+  const items = document.querySelectorAll('.hl-clear-item');
+  const allSelected = hlClearSelected.size === items.length;
+  items.forEach(item => {
+    const key = item.dataset.key;
+    if (allSelected) {
+      item.classList.remove('selected');
+      hlClearSelected.delete(key);
+    } else {
+      item.classList.add('selected');
+      hlClearSelected.add(key);
+    }
+  });
+  updateSelectAllState();
+  $hlClearBtn.disabled = hlClearSelected.size === 0;
+}
+
+function updateSelectAllState() {
+  const items = document.querySelectorAll('.hl-clear-item');
+  const el = document.getElementById('hlSelectAll');
+  el.textContent = hlClearSelected.size === items.length && items.length > 0 ? '取消全选' : '全选';
+}
+
+function clearDateData() {
+  if (!hlPickerKey || hlClearSelected.size === 0) return;
+  if (!confirm('确定清除所选数据？此操作不可撤销')) return;
+
+  const key = hlPickerKey;
+  const dayData = getDateData(key);
+  const cleared = [];
+
+  if (hlClearSelected.has('events')) {
+    dayData.events = [];
+    cleared.push('事件');
+  }
+  if (hlClearSelected.has('notes')) {
+    dayData.notes = [];
+    cleared.push('记事');
+  }
+  if (hlClearSelected.has('accounts')) {
+    dayData.accounts = [];
+    cleared.push('记账');
+  }
+  if (hlClearSelected.has('highlight')) {
+    dayData.highlight = null;
+    cleared.push('高亮');
+  }
+
+  save();
+  closeHighlightPicker();
+  renderCalendar();
+  if ($dayPage.classList.contains('active') && selectedDate === key) {
+    renderEventsList();
+    renderAccountsList();
+  }
+  showToast(`已清除：${cleared.join('、')}`);
+}
+
+function closeHighlightPicker() {
+  hlPickerKey = null;
+  $hlOverlay.classList.remove('show');
+}
+
 function showToast(message) {
   $toast.textContent = message;
   $toast.classList.add('show');
   setTimeout(() => $toast.classList.remove('show'), 1800);
 }
 
-selectedCategory = 'food';
+function openDatePicker() {
+  $dpYear.innerHTML = '';
+  for (let y = today.getFullYear() - 5; y <= today.getFullYear() + 5; y++) {
+    $dpYear.innerHTML += `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`;
+  }
+
+  $dpMonth.innerHTML = '';
+  for (let m = 1; m <= 12; m++) {
+    $dpMonth.innerHTML += `<option value="${m}" ${m - 1 === currentMonth ? 'selected' : ''}>${m}月</option>`;
+  }
+
+  const selYear = parseInt($dpYear.value);
+  const selMonth = parseInt($dpMonth.value) - 1;
+  updateDays(selYear, selMonth);
+
+  const selDay = selectedDate ? parseInt(selectedDate.split('-')[2]) : today.getDate();
+  $dpDay.value = selDay;
+
+  $dpYear.onchange = () => updateDays(parseInt($dpYear.value), parseInt($dpMonth.value) - 1);
+  $dpMonth.onchange = () => updateDays(parseInt($dpYear.value), parseInt($dpMonth.value) - 1);
+
+  $datePickerOverlay.classList.add('show');
+}
+
+function updateDays(year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prev = $dpDay.value ? parseInt($dpDay.value) : today.getDate();
+  $dpDay.innerHTML = '';
+  for (let d = 1; d <= daysInMonth; d++) {
+    $dpDay.innerHTML += `<option value="${d}" ${d === Math.min(prev, daysInMonth) ? 'selected' : ''}>${d}日</option>`;
+  }
+}
+
+function closeDatePicker() {
+  $datePickerOverlay.classList.remove('show');
+}
+
+function jumpToDate() {
+  const y = parseInt($dpYear.value);
+  const m = parseInt($dpMonth.value) - 1;
+  const d = parseInt($dpDay.value);
+  currentYear = y;
+  currentMonth = m;
+  selectedDate = dateKey(y, m, d);
+  closeDatePicker();
+  renderCalendar();
+  showToast(`${y}年${m + 1}月${d}日`);
+}
+
 currentYear = today.getFullYear();
 currentMonth = today.getMonth();
 loadData();
