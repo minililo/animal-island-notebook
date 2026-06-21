@@ -23,11 +23,13 @@ npm run cap:sync
 ### 3. 打开原生IDE
 
 **Android:**
+
 ```bash
 npm run cap:open:android
 ```
 
 **iOS (需要Mac):**
+
 ```bash
 npm run cap:open:ios
 ```
@@ -35,6 +37,7 @@ npm run cap:open:ios
 ### 4. 构建APK (Android)
 
 在Android Studio中:
+
 1. 等待Gradle同步完成
 2. 点击 Build → Build Bundle(s) / APK(s) → Build APK(s)
 3. APK文件位于: `android/app/build/outputs/apk/debug/app-debug.apk`

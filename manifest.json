@@ -1,24 +1,24 @@
 {
-  "name": "动森记事本",
-  "short_name": "动森笔记",
-  "description": "Animal Island风格的日常记账与记事工具",
-  "start_url": "./index.html",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#fdf8f0",
-  "theme_color": "#fdf8f0",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+    "name": "动森记事本",
+    "short_name": "动森笔记",
+    "description": "Animal Island风格的日常记账与记事工具",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#fdf8f0",
+    "theme_color": "#fdf8f0",
+    "icons": [
+        {
+            "src": "icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
 }
