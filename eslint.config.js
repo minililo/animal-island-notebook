@@ -13,6 +13,7 @@ export default tseslint.config(
             'coverage/**',
             'node_modules/**',
             'scripts/**',
+            'sw.js',
             '*.config.js',
             '*.config.ts',
             // 第三方压缩库 + 对应声明文件（来自 Loading/island/）
